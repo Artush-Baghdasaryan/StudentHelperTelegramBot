@@ -1,6 +1,36 @@
-﻿namespace StudentHelper.Services.Services.TelegramServices;
+﻿using StudentHelper.Services.Interfaces;
+using Telegram.Bot.Types.Enums;
 
-public class ReceiveService
+namespace StudentHelper.Services.Services.TelegramServices;
+using Telegram.Bot;
+using Telegram.Bot.Polling;
+
+public class ReceiverService : IReceiverService
 {
+    private readonly ITelegramBotClient _telegramBotClient;
+    private readonly IUpdateHandler _updateHandler;
     
+    public ReceiverService(ITelegramBotClient telegramBotClient, IUpdateHandler updateHandler)
+    {
+        _telegramBotClient = telegramBotClient;
+        _updateHandler = updateHandler;
+    }
+    
+    public async Task ReceiveAsync(CancellationToken cancellationToken)
+    {
+        var receiverOptions = new ReceiverOptions
+        {
+            AllowedUpdates = new[]
+            {
+                UpdateType.Message,
+                UpdateType.CallbackQuery
+            },
+            ThrowPendingUpdates = true,
+        };
+        
+        var me = await _telegramBotClient.GetMeAsync(cancellationToken);
+        Console.WriteLine($"Bot receiver updates for {me.Username}");
+        
+        await _telegramBotClient.ReceiveAsync(_updateHandler, receiverOptions, cancellationToken);
+    }
 }

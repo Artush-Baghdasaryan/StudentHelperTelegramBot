@@ -1,4 +1,5 @@
 ﻿using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StudentHelper.Services.Interfaces;
@@ -22,12 +23,24 @@ public class QuizService : IQuizService
     {
         var lecture = await _aiPromptService.GenerateNewLecture(quizTheme);
         var questions = await _aiPromptService.GenerateQuestionsForLecture(lecture);
-        var generatedQuestions = JsonConvert.DeserializeObject<GeneratedQuestionsDto>(questions);
+        var generatedQuestions = JsonConvert.DeserializeObject<GeneratedQuestionsDto>(ExtractJsonObject(questions));
         var quiz = new Quiz
         {
             Lecture = lecture,
             Questions = generatedQuestions?.Questions
         };
         return quiz ?? throw new InvalidOperationException();
+    }
+    
+    private string ExtractJsonObject(string answerContent)
+    {
+        var regex = new Regex(@"\{.*\}");
+        var match = regex.Match(answerContent.Replace("\n", ""));
+        if (match.Success)
+        {
+            return match.Value;
+        }
+
+        throw new InvalidOperationException("Ai model didn't return json object");
     }
 }
