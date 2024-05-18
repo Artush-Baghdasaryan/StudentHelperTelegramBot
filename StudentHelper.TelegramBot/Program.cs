@@ -8,9 +8,93 @@ using StudentHelper.Services.Models;
 using StudentHelper.Services.Services.GigachatServices;
 using StudentHelper.Services.Settings;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
-IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
+
+
+class Program
+{
+
+    private static ITelegramBotClient _botClient;
+
+    private static ReceiverOptions _receiverOptions;
+
+    private static async Task UpdateHandler(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        try
+        {
+            switch (update.Type)
+            {
+                case UpdateType.Message:
+                    {
+                        var message = update.Message;
+
+                        var user = message.From;
+
+                        Console.WriteLine($"Received a '{message.Text}' message in chat.");
+
+                        var chat = message.Chat;
+
+                        switch (message.Type)
+                        {
+                            case MessageType.Text:
+                                {
+                                    if (message.Text == "/start")
+                                    {
+                                        await botClient.SendTextMessageAsync(
+                                            chat.Id,
+                                            "Привет, я бот по помощи студентам studenthelper!" +
+                                            "Я помогу тебе с решением любой задачи.");
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        await botClient.SendTextMessageAsync(chat.Id, message.Text);
+                                    }
+
+                                    return;
+                                }
+
+                            default:
+                                {
+                                    await botClient.SendTextMessageAsync(
+                                        chat.Id,
+                                        "Хуй!");
+                                    return;
+                                }
+                        }
+
+                        return;
+                    }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+        }
+    }
+
+    private static Task ErrorHandler(ITelegramBotClient botClient, Exception error, CancellationToken cancellationToken)
+    {
+        var ErrorMessage = error switch
+        {
+            ApiRequestException apiRequestException
+                => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+            _ => error.ToString()
+        };
+
+        Console.WriteLine(ErrorMessage);
+        return Task.CompletedTask;
+    }
+
+    static async Task Main(string [] args)
+    {
+        IHost host = Host.CreateDefaultBuilder(args)
+        .ConfigureServices((context, services) =>
     {
         services.Configure<GigachatApiConfiguration>(context.Configuration
             .GetSection(GigachatApiConfiguration.ConfigurationSectionName));
@@ -35,43 +119,30 @@ IHost host = Host.CreateDefaultBuilder(args)
             {
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; }
             });
-        
+
         services.ConfigureServices();
     })
-    .Build();
+        .Build();
 
-var quizService = host.Services.GetRequiredService<IQuizService>();
-var botConfig = host.Services.GetRequiredService<IOptions<TelegramBotConfiguration>>()!.Value;
-
-while (true)
-{
-    Console.Write("Enter theme: ");
-    var lectureTheme = Console.ReadLine();
-    if (string.IsNullOrWhiteSpace(lectureTheme))
-    {
-        break;
-    }
-    
-    var result = await quizService.GenerateNewQuiz(lectureTheme);
-    ConsoleWriteQuiz(result);
-}
-
-static void ConsoleWriteQuiz(Quiz quiz)
-{
-    Console.WriteLine(quiz.Lecture);
-    if (quiz.Questions is null)
-    {
-        return;
-    }
-    
-    foreach (var question in quiz.Questions)
-    {
-        Console.WriteLine("Question:   ", question.Question);
-        foreach (var option in question.Options)
+        _botClient = new TelegramBotClient("7104954159:AAEo_7WZVfPonHtUsgd4w3I2vIeuLOoLqhI");
+        _receiverOptions = new ReceiverOptions
         {
-            Console.WriteLine(option.Option);
-        }
-    }    
+            AllowedUpdates = new[]
+            {
+                UpdateType.Message,
+                UpdateType.CallbackQuery
+            },
+            ThrowPendingUpdates = true,
+        };
+
+        using var cts = new CancellationTokenSource();
+
+        _botClient.StartReceiving(UpdateHandler, ErrorHandler, _receiverOptions, cts.Token);
+
+        var me = await _botClient.GetMeAsync();
+        Console.WriteLine($"Start listening for @{me.Username}");
+
+        await host.RunAsync();
+    }
 }
 
-await host.RunAsync();
