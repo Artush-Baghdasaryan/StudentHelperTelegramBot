@@ -1,44 +1,55 @@
 ﻿using System.Text;
+using StudentHelper.Services.Data;
 using StudentHelper.Services.Interfaces;
+using StudentHelper.Services.Services.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace StudentHelper.Services.Commands;
 
 public class NewLectureCommand : TelegramBotCommand
 {
     private readonly IQuizService _quizService;
+    private readonly BotDataContext _dataContext;
     
     public NewLectureCommand(
         ITelegramBotClient botClient,
-        IQuizService quizService) : base(botClient)
+        IQuizService quizService,
+        BotDataContext dataContext) : base(botClient)
     {
         _quizService = quizService;
+        _dataContext = dataContext;
     }
 
     public override async Task ExecuteCommand(Message message, CancellationToken cancellationToken)
     {
-        var newLecture = await _quizService.GenerateNewQuiz(message.Text);
-        await BotClient.SendTextMessageAsync(message.Chat.Id, newLecture.Lecture);
-
-        var answer = new StringBuilder();
-        answer.AppendLine("\n");
-        var optionIndex = 1;
-        foreach (var question in newLecture.Questions)
+        if (message.Text is not { } text)
         {
-            answer.AppendLine(question.Question);
-            foreach (var option in question.Options)
-            {
-                answer.AppendLine($"{optionIndex}) {option.Option}");
-            }
-
-            answer.AppendLine($"Правильный ответ: {question.Answer}");
-            answer.AppendLine("\n");
-            answer.AppendLine("\n");
-            answer.AppendLine("\n");
-            optionIndex++;
+            return;
         }
-        await BotClient.SendTextMessageAsync(message.Chat.Id, answer.ToString());
+        
+        var newQuiz = await _quizService.GenerateNewQuiz(text);
+        if (newQuiz.Lecture is not { } lecture)
+        {
+            return;
+        }
+        
+        _dataContext.AddTest(message.Chat.Id, newQuiz);
+        
+        var replyKeyboard = new ReplyKeyboardMarkup(new[]
+        {
+            new KeyboardButton[] { "Начать тест" }
+        })
+        {
+            ResizeKeyboard = true
+        };
 
+        await BotClient.SendTextMessageAsync(
+            chatId: message.Chat.Id,
+            text: lecture,
+            replyMarkup: replyKeyboard,
+            cancellationToken: cancellationToken
+        );
     }
 }

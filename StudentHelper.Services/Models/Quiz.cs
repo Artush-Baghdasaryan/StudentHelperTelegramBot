@@ -9,8 +9,23 @@ public class Quiz
 public class QuestionDto {
     public string? Question { get; set; }
     public IList<OptionDto>? Options { get; set; }
-    public string? Answer { get; set; }
-} 
+    public string? CorrectAnswer { get; set; }
+
+    public bool IsCorrectAnswer(string answer) => String.Equals(answer, CorrectAnswer);
+}
+
+public class TestResult
+{
+    public string? Lecture { get; set; }
+    public IList<QuestionResult>? QuestionResults { get; set; }
+    public bool TestStarted { get; set; }
+    public int CurrentQuestionIndex { get; set; }
+}
+
+public class QuestionResult : QuestionDto
+{
+    public string? UserAnswer { get; set; }
+}
 
 public class OptionDto
 {

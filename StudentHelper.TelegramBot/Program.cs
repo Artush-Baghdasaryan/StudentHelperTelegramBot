@@ -37,6 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; }
             });
 
+
         services.ConfigureServices();
     })
     .Build();
