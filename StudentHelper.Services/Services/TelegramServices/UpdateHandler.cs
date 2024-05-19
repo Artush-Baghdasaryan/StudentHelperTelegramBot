@@ -74,7 +74,7 @@ public class UpdateHandler : IUpdateHandler
                     }
                 }
 
-            }
+            } 
         }
         catch (Exception ex)
         {

@@ -10,7 +10,7 @@ public class QuestionDto {
     public string? Question { get; set; }
     public IList<OptionDto>? Options { get; set; }
     public string? Answer { get; set; }
-}
+} 
 
 public class OptionDto
 {
