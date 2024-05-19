@@ -18,8 +18,7 @@ public class NextQuestionCommand : TestCommand
     public override async Task ExecuteCommand(Message message, CancellationToken cancellationToken)
     {
         await SetAnswerToQuestion(message.Chat.Id, message.Text!);
-        // проверка на то что тест закончился
-        
+
         UpdateCurrentQuestionIndex(message.Chat.Id);
 
         await base.ExecuteCommand(message, cancellationToken);

@@ -1,8 +1,10 @@
 ﻿using System.Text.RegularExpressions;
+using System.Threading;
 using StudentHelper.Services.Data;
 using StudentHelper.Services.Interfaces;
 using StudentHelper.Services.Services.Data;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace StudentHelper.Services.Commands;
 
@@ -39,9 +41,9 @@ public class CommandBuilder
         {
             if (!IsCommandValid(command))
             {
-                // комманда которая отправляет предупрждение о том что текст не валидный
+                return new InvalidCommand(_botClient);
             }
-            
+
             return new NextQuestionCommand(_botClient, _dataContext);
         }
 

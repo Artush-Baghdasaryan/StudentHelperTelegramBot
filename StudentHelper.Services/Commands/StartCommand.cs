@@ -14,9 +14,9 @@ public class StartCommand : TelegramBotCommand
     {
         await BotClient.SendTextMessageAsync(
             chatId: message.Chat.Id,
-            text: "Привет, я бот по помощи студентам studenthelper!\n" +
+            text: "Привет, я бот по помощи студентам studenthelper! 📚 \n" +
                   "Я помогу тебе с решением любой задачи!\n" +
-                  "Напиши тему для теста!",
+                  "Напиши тему для теста! ✏️",
             cancellationToken: cancellationToken);
     }
 }
