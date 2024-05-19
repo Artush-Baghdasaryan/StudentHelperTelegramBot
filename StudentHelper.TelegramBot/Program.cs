@@ -4,14 +4,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using StudentHelper.Services;
 using StudentHelper.Services.Interfaces;
-using StudentHelper.Services.Models;
 using StudentHelper.Services.Services.GigachatServices;
 using StudentHelper.Services.Settings;
 using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
+
 
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -56,7 +52,6 @@ catch (Exception e)
 {
     Console.WriteLine($"Exception caught {e.Message} {e.StackTrace}");
 }
-
 
 await host.RunAsync();
 

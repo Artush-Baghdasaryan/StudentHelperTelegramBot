@@ -59,6 +59,7 @@ public class UpdateHandler : IUpdateHandler
                                 answer.AppendLine("\n");
                                 answer.AppendLine("\n");
                                 answer.AppendLine("\n");
+                                optionIndex++;
                             }
                             await botClient.SendTextMessageAsync(chat.Id, answer.ToString());
 

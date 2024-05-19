@@ -38,7 +38,7 @@ public class ChatGptService : IChatGptService
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
     
-    protected string GetContentData(JToken messages)
+    private string GetContentData(JToken messages)
     {
         var jObject = new JObject
         {
