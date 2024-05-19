@@ -1,4 +1,5 @@
-﻿using StudentHelper.Services.Data;
+﻿using System.Text;
+using StudentHelper.Services.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -18,11 +19,55 @@ public class NextQuestionCommand : TestCommand
     public override async Task ExecuteCommand(Message message, CancellationToken cancellationToken)
     {
         await SetAnswerToQuestion(message.Chat.Id, message.Text!);
-
+        var finished = await FinishTestIfNeed(message.Chat.Id, cancellationToken);
+        if (finished)
+        {
+            return;
+        }
+        
         UpdateCurrentQuestionIndex(message.Chat.Id);
 
         await base.ExecuteCommand(message, cancellationToken);
+    }
+
+    private async Task<bool> FinishTestIfNeed(long chatId, CancellationToken cancellationToken)
+    {
+        var result = new StringBuilder();
+        var correctAnswerEmoji = "\u2705";
+        var incorrectEmoji = "\u274c";
         
+        var test = _dataContext.GetTestByChatId(chatId);
+        if (test?.CurrentQuestionIndex + 1 < test?.QuestionResults?.Count)
+        {
+            return false;
+        }
+        
+        var questions = test?.QuestionResults;
+        if (questions is null)
+        {
+            return false;
+        }
+
+        var correctAnswersCount = test?.QuestionResults?.Where(q => q.IsCorrectAnswer(q.UserAnswer ?? "")).Count();
+        foreach (var question in questions)
+        {
+            var emoji = question.IsCorrectAnswer(question.UserAnswer ?? "") ? correctAnswerEmoji : incorrectEmoji;
+            
+            result.AppendLine($"Вопрос: {question.Question}");
+            result.AppendLine($"Правильный ответ: {question.CorrectAnswer} {emoji}");
+            result.AppendLine("\n");
+        }
+
+        result.AppendLine("\n");
+        result.AppendLine($"Вы ответили правильно {correctAnswersCount}/{test?.QuestionResults?.Count}");
+
+        await BotClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: result.ToString(),
+            cancellationToken: cancellationToken);
+        
+        FinishTesting(chatId);
+        return true;
     }
 
     private Task SetAnswerToQuestion(long chatId, string answerIndex)
@@ -56,9 +101,8 @@ public class NextQuestionCommand : TestCommand
         _dataContext.UpdateTest(chatId, test);
     }
 
-    private int GetCurrentQuestionIndex(long chatId)
+    private void FinishTesting(long chatId)
     {
-        var test = _dataContext.GetTestByChatId(chatId);
-        return test?.CurrentQuestionIndex ?? throw new InvalidOperationException();
+        _dataContext.RemoveTest(chatId);
     }
 }

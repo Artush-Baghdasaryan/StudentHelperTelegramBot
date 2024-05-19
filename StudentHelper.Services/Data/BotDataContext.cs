@@ -42,4 +42,9 @@ public class BotDataContext
     {
         return _tests.GetValueOrDefault(chatId);
     }
+
+    public void RemoveTest(long chatId)
+    {
+        _tests.Remove(chatId);
+    }
 }

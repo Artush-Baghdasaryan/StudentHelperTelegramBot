@@ -29,16 +29,12 @@ public class NewLectureCommand : TelegramBotCommand
             return;
         }
 
-        //////////////////////////////////
-
         var waitingMessage = await BotClient.SendTextMessageAsync(
             chatId: message.Chat.Id,
             text: "⏳ Подождите ...",
             cancellationToken: cancellationToken
         );
-
-        //////////////////////////////////
-
+        
         var newQuiz = await _quizService.GenerateNewQuiz(text);
         if (newQuiz.Lecture is not { } lecture)
         {
@@ -54,12 +50,8 @@ public class NewLectureCommand : TelegramBotCommand
         {
             ResizeKeyboard = true
         };
-
-        ////////////////////////////////////////////////////
         
         await BotClient.DeleteMessageAsync(message.Chat.Id, waitingMessage.MessageId, cancellationToken);
-
-        /////////////////////////////////////////////////////
 
         await BotClient.SendTextMessageAsync(
             chatId: message.Chat.Id,

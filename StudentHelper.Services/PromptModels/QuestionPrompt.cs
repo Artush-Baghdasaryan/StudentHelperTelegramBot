@@ -24,7 +24,7 @@ public class QuestionPrompt
                 }
             }
         },
-        {"answer", ""}
+        {"correctAnswer", ""}
     };
 
     public static string Prompt => PromptObject.ToString();
