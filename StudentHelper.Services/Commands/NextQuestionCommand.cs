@@ -1,5 +1,4 @@
 ﻿using StudentHelper.Services.Data;
-using StudentHelper.Services.Services.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -19,13 +18,15 @@ public class NextQuestionCommand : TestCommand
     public override async Task ExecuteCommand(Message message, CancellationToken cancellationToken)
     {
         await SetAnswerToQuestion(message.Chat.Id, message.Text!);
+        // проверка на то что тест закончился
+        
         UpdateCurrentQuestionIndex(message.Chat.Id);
 
         await base.ExecuteCommand(message, cancellationToken);
         
     }
 
-    private Task SetAnswerToQuestion(long chatId, string answer)
+    private Task SetAnswerToQuestion(long chatId, string answerIndex)
     {
         var test = _dataContext.GetTestByChatId(chatId);
         if (test is null)
@@ -39,7 +40,7 @@ public class NextQuestionCommand : TestCommand
             throw new InvalidOperationException();
         }
         
-        currentQuestion.UserAnswer = answer;
+        currentQuestion.UserAnswer = currentQuestion.Options?[int.Parse(answerIndex) - 1].Option;
         _dataContext.UpdateTest(chatId, test);
         return Task.CompletedTask;
     }

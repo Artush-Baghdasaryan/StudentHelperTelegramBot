@@ -37,10 +37,11 @@ public class CommandBuilder
         var test = _dataContext.GetTestByChatId(chatId);
         if (test is not null && test.TestStarted)
         {
-            if (IsCommandValid(command))
+            if (!IsCommandValid(command))
             {
                 // комманда которая отправляет предупрждение о том что текст не валидный
             }
+            
             return new NextQuestionCommand(_botClient, _dataContext);
         }
 
