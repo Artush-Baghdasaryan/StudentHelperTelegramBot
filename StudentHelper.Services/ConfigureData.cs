@@ -22,7 +22,7 @@ public static class ConfigureData
         services.AddScoped<CommandBuilder>();
         
         services.AddScoped<IQuizService, QuizService>();
-        services.AddScoped<IReceiverService, ReceiverService>();
+        //services.AddScoped<IReceiverService, ReceiverService>();
         services.AddScoped<IUpdateHandler, UpdateHandler>();
     }
 }

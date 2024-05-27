@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using StudentHelper.Services;
 using StudentHelper.Services.Interfaces;
 using StudentHelper.Services.Services.GigachatServices;
+using StudentHelper.Services.Services.TelegramServices;
 using StudentHelper.Services.Settings;
 using Telegram.Bot;
 
@@ -37,22 +38,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; }
             });
 
-
+        services.AddHostedService<ReceiverService>();
         services.ConfigureServices();
     })
     .Build();
-
-
-try
-{
-    using var cts = new CancellationTokenSource();
-    var receiver = host.Services.GetRequiredService<IReceiverService>();
-    await receiver.ReceiveAsync(cts.Token);
-}
-catch (Exception e)
-{
-    Console.WriteLine($"Exception caught {e.Message} {e.StackTrace}");
-}
 
 await host.RunAsync();
 

@@ -41,7 +41,7 @@ public class NewLectureCommand : TelegramBotCommand
             return;
         }
 
-        _dataContext.AddTest(message.Chat.Id, newQuiz);
+        _dataContext.AddEntity(message.Chat.Id, newQuiz);
         
         var replyKeyboard = new ReplyKeyboardMarkup(new[]
         {
@@ -52,12 +52,27 @@ public class NewLectureCommand : TelegramBotCommand
         };
         
         await BotClient.DeleteMessageAsync(message.Chat.Id, waitingMessage.MessageId, cancellationToken);
+        var lectureMessages = new List<string>();
 
-        await BotClient.SendTextMessageAsync(
-            chatId: message.Chat.Id,
-            text: lecture,
-            replyMarkup: replyKeyboard,
-            cancellationToken: cancellationToken
-        );
+        if (lecture.Length > 4096)
+        {
+            lectureMessages.Add(lecture.Substring(0, 4096));
+            lectureMessages.Add(lecture.Substring(100, lecture.Length - 4096));
+        }
+        else
+        {
+            lectureMessages.Add(lecture);
+        }
+        
+        foreach (var lectureMessage in lectureMessages)
+        {
+            await BotClient.SendTextMessageAsync(
+                chatId: message.Chat.Id,
+                text: lectureMessage,
+                replyMarkup: replyKeyboard,
+                cancellationToken: cancellationToken
+            );
+        }
+        
     }
 }

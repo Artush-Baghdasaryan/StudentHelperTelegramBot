@@ -2,6 +2,7 @@
 using StudentHelper.Services.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace StudentHelper.Services.Commands;
 
@@ -64,6 +65,7 @@ public class NextQuestionCommand : TestCommand
         await BotClient.SendTextMessageAsync(
             chatId: chatId,
             text: result.ToString(),
+            replyMarkup: new ReplyKeyboardRemove(),
             cancellationToken: cancellationToken);
         
         FinishTesting(chatId);

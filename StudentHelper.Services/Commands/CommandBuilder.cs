@@ -1,10 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using System.Threading;
 using StudentHelper.Services.Data;
 using StudentHelper.Services.Interfaces;
-using StudentHelper.Services.Services.Data;
+using StudentHelper.Services.Models;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace StudentHelper.Services.Commands;
 
@@ -26,28 +24,50 @@ public class CommandBuilder
 
     public TelegramBotCommand GetCommand(string command, long chatId)
     {
-        return command switch
+        var chatState = _dataContext.GetTestByChatId(chatId)?.ChatState;
+        
+        return chatState switch
         {
-            "/start" => new StartCommand(_botClient),
-            "Начать тест" => new TestCommand(_botClient, _dataContext),
-            _ => GetCorrectCommand(command, chatId)
+            ChatState.None => GetBaseCommand(command),
+            ChatState.Lecture => GetCommandDuringLecture(command),
+            ChatState.Test => GetNextQuestionCommand(command),
+            null => GetBaseCommand(command),
+            _ => throw new ArgumentOutOfRangeException()
         };
     }
 
-    private TelegramBotCommand GetCorrectCommand(string command, long chatId)
+    public TelegramBotCommand GetErrorCommand()
     {
-        var test = _dataContext.GetTestByChatId(chatId);
-        if (test is not null && test.TestStarted)
-        {
-            if (!IsCommandValid(command))
-            {
-                return new InvalidCommand(_botClient);
-            }
+        return new ErrorCommand(_botClient);
+    }
 
+    private TelegramBotCommand GetBaseCommand(string command)
+    {
+        return command switch
+        {
+            "/start" => new StartCommand(_botClient),
+            _ => new NewLectureCommand(_botClient, _quizService, _dataContext)
+        };
+    }
+
+    private TelegramBotCommand GetCommandDuringLecture(string command)
+    {
+        if (command.Equals("Начать тест"))
+        {
+            return new TestCommand(_botClient, _dataContext);
+        }
+
+        return new InvalidCommand(_botClient, "Только после окончания теста вы можете перейти к следующей лекции");
+    }
+
+    private TelegramBotCommand GetNextQuestionCommand(string command)
+    {
+        if (IsCommandValid(command))
+        {
             return new NextQuestionCommand(_botClient, _dataContext);
         }
 
-        return new NewLectureCommand(_botClient, _quizService, _dataContext);
+        return new InvalidCommand(_botClient, "Введите цифру!");
     }
 
     private bool IsCommandValid(string command)

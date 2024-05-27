@@ -18,8 +18,15 @@ public class TestResult
 {
     public string? Lecture { get; set; }
     public IList<QuestionResult>? QuestionResults { get; set; }
-    public bool TestStarted { get; set; }
     public int CurrentQuestionIndex { get; set; }
+    public ChatState ChatState { get; set; }
+}
+
+public enum ChatState
+{
+    None,
+    Lecture,
+    Test,
 }
 
 public class QuestionResult : QuestionDto

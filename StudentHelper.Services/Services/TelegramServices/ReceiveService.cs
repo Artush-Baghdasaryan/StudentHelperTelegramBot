@@ -1,11 +1,12 @@
-﻿using StudentHelper.Services.Interfaces;
+﻿using Microsoft.Extensions.Hosting;
+using StudentHelper.Services.Interfaces;
 using Telegram.Bot.Types.Enums;
 
 namespace StudentHelper.Services.Services.TelegramServices;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 
-public class ReceiverService : IReceiverService
+public class ReceiverService : BackgroundService
 {
     private readonly ITelegramBotClient _telegramBotClient;
     private readonly IUpdateHandler _updateHandler;
@@ -15,8 +16,8 @@ public class ReceiverService : IReceiverService
         _telegramBotClient = telegramBotClient;
         _updateHandler = updateHandler;
     }
-    
-    public async Task ReceiveAsync(CancellationToken cancellationToken)
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var receiverOptions = new ReceiverOptions
         {

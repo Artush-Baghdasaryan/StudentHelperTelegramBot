@@ -18,13 +18,14 @@ public class BotDataContext
         }).CreateMapper();
     }
 
-    public void AddTest(long chatId, Quiz quiz)
+    public void AddEntity(long chatId, Quiz quiz)
     {
+        _tests.Remove(chatId);
         var testResult = new TestResult
         {
             Lecture = quiz.Lecture,
             QuestionResults = _mapper.Map<List<QuestionResult>>(quiz.Questions),
-            TestStarted = false,
+            ChatState = ChatState.Lecture,
             CurrentQuestionIndex = 0
         };
         _tests.Add(chatId, testResult);

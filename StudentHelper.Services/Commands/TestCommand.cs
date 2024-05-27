@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using StudentHelper.Services.Data;
+using StudentHelper.Services.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -55,12 +56,12 @@ public class TestCommand : TelegramBotCommand
     private void StartTestIfNeed(long chatId)
     {
         var test = _dataContext.GetTestByChatId(chatId);
-        if (test is null || test.TestStarted)
+        if (test is null || test.ChatState == ChatState.Test)
         {
             return;
         }
 
-        test.TestStarted = true;
+        test.ChatState = ChatState.Test;
         _dataContext.UpdateTest(chatId, test);
     }
 

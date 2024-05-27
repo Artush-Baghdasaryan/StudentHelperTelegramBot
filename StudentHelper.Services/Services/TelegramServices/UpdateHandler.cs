@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Options;
 using StudentHelper.Services.Commands;
+using StudentHelper.Services.Data;
 using StudentHelper.Services.Interfaces;
 using StudentHelper.Services.Models;
 using Telegram.Bot;
@@ -13,16 +14,22 @@ namespace StudentHelper.Services.Services.TelegramServices;
 
 public class UpdateHandler : IUpdateHandler
 {
-    private readonly IQuizService _quizService;
     private readonly CommandBuilder _commandBuilder;
-
-    public UpdateHandler(IQuizService quizService, CommandBuilder commandBuilder)
+    private readonly BotDataContext _dataContext;
+    
+    public UpdateHandler(BotDataContext dataContext, CommandBuilder commandBuilder)
     {
-        _quizService = quizService;
         _commandBuilder = commandBuilder;
+        _dataContext = dataContext;
     }
 
-    public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        Task.Run(() => HandleUpdate(botClient, update, cancellationToken), cancellationToken);
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         var message = update.Message;
         if (message is null)
@@ -41,8 +48,17 @@ public class UpdateHandler : IUpdateHandler
         
         Console.WriteLine($"Received a '{text}' message in chat.");
 
-        var command = _commandBuilder.GetCommand(text, message.Chat.Id);
-        await command.ExecuteCommand(message, cancellationToken);
+        try
+        {
+            var command = _commandBuilder.GetCommand(text, message.Chat.Id);
+            await command.ExecuteCommand(message, cancellationToken);
+        }
+        catch (Exception)
+        {
+            var errorCommand = _commandBuilder.GetErrorCommand();
+            await errorCommand.ExecuteCommand(message, cancellationToken);
+            _dataContext.RemoveTest(message.Chat.Id);
+        }
     }
 
     public Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)

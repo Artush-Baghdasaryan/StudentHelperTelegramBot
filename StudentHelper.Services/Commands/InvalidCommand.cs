@@ -10,16 +10,18 @@ namespace StudentHelper.Services.Commands;
 
 public class InvalidCommand : TelegramBotCommand
 {
-    public InvalidCommand(ITelegramBotClient botClient) : base(botClient)
+    private readonly string _message;
+    
+    public InvalidCommand(ITelegramBotClient botClient, string message) : base(botClient)
     {
-
+        _message = message;
     }
 
     public override async Task ExecuteCommand(Message message, CancellationToken cancellationToken)
     {
         await BotClient.SendTextMessageAsync(
             chatId: message.Chat.Id,
-            text: "Введите цифру",
+            text: _message,
             cancellationToken: cancellationToken);
     }
 }
